@@ -82,6 +82,90 @@ powershell -ExecutionPolicy Bypass -File ".\scripts\Restore-StoreGalaxyConnect.p
 - Do not update Galaxy Connect after patching unless you are ready to rerun the installer.
 - This is version-specific. If Samsung updates `SamsungContinuityService`, the binary patch offsets may need updating.
 
+## Known Working Setup
+
+This setup has been confirmed working with:
+
+- Windows 11, x64
+- Non-Galaxy Book Lenovo laptop
+- Samsung Galaxy S22 Ultra
+- `SAMSUNGELECTRONICSCoLtd.SamsungContinuityService` version `2.1.11.0`
+- `SAMSUNGELECTRONICSCoLtd.MultiControl` version `2.7.1300.0`
+- Galaxy Connect installed from Microsoft Store
+- Samsung account signed in on both Windows and phone
+- Bluetooth and Wi-Fi enabled on both devices
+
+Expected working signs:
+
+```powershell
+Get-AppxPackage -Name SAMSUNGELECTRONICSCoLtd.SamsungContinuityService | Select Name,Version,SignatureKind,Status,InstallLocation
+Get-Process WindowsMCFCore -ErrorAction SilentlyContinue | Select Id,Path
+Get-NetTCPConnection -LocalPort 45823 -ErrorAction SilentlyContinue | Select LocalAddress,LocalPort,State,OwningProcess
+```
+
+Expected output:
+
+- `SignatureKind` is `Developer`.
+- `WindowsMCFCore.exe` is running.
+- TCP port `45823` is listening.
+- Multi Control and Nearby Devices can discover the Galaxy phone.
+
+## Troubleshooting
+
+### Galaxy Connect says "not working", but Multi Control works
+
+This can happen. Galaxy Connect UI depends on Samsung cloud/account components, and those can crash or report an unhealthy state even while the actual Multi Control stack is working.
+
+If these are true, you can ignore the Galaxy Connect warning:
+
+- Multi Control opens.
+- Nearby Devices can see the phone.
+- Mouse/keyboard handoff works.
+- `WindowsMCFCore.exe` is running.
+- Port `45823` is listening.
+
+Check:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\scripts\Get-Status.ps1"
+```
+
+If devices disappear, reset discovery:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\scripts\Reset-Discovery.ps1"
+```
+
+### Multi Control opens but no device appears
+
+Check the phone first:
+
+- Same Samsung account on PC and phone.
+- Bluetooth enabled.
+- Wi-Fi enabled.
+- Phone is nearby and unlocked.
+- Multi Control enabled on the phone.
+- Nearby device scanning enabled on the phone.
+
+Then run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\scripts\Reset-Discovery.ps1"
+```
+
+### Install fails with certificate/root trust error
+
+Run the installer from an elevated PowerShell window. The script imports the local signing certificate into:
+
+- `CurrentUser\TrustedPeople`
+- `CurrentUser\Root`
+- `LocalMachine\TrustedPeople`
+- `LocalMachine\Root`
+
+### Install fails because package version is unsupported
+
+The current patch offsets target `SamsungContinuityService` `2.1.11.0`. If Samsung updates the package, restore the Store version or adjust the patch offsets before installing.
+
 ## Current patch details
 
 For package version `2.1.11.0`:
