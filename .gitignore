@@ -1,0 +1,16 @@
+artifacts/
+build/
+*.log
+*.dmp
+*.etl
+*.cab
+*.appx
+*.msix
+*.appxbundle
+*.msixbundle
+*.cer
+*.pfx
+*.exe
+*.dll
+*.pri
+*.winmd
